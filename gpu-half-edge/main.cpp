@@ -1,4 +1,4 @@
-#include "gpu_shared.h"
+ï»¿#include "gpu_shared.h"
 
 #include <assimp/scene.h>
 #include <assimp/Importer.hpp>
@@ -50,6 +50,8 @@ int32_t mainFunc(int32_t argc, const char* argv[]) {
         }
     }
 
+
+
     hpprintf("Reading: %s ... ", filePath.string().c_str());
     fflush(stdout);
     Assimp::Importer importer;
@@ -61,6 +63,8 @@ int32_t mainFunc(int32_t argc, const char* argv[]) {
         return -1;
     }
     hpprintf("done.\n");
+
+
 
     CUcontext cuContext;
     CUstream cuStream;
@@ -83,16 +87,18 @@ int32_t mainFunc(int32_t argc, const char* argv[]) {
     cudau::Kernel findNeighborFaces(
         cuModule, "findNeighborFaces", cudau::dim3(32, 1, 1), 0);
 
+
+
     constexpr cudau::BufferType cudaBufferType = cudau::BufferType::Device;
 
-    // JP: ƒƒbƒVƒ…‚²‚Æ‚Éƒn[ƒtƒGƒbƒWƒf[ƒ^\‘¢‚ğ\’z‚·‚éB
+    // JP: ãƒ¡ãƒƒã‚·ãƒ¥ã”ã¨ã«ãƒãƒ¼ãƒ•ã‚¨ãƒƒã‚¸ãƒ‡ãƒ¼ã‚¿æ§‹é€ ã‚’æ§‹ç¯‰ã™ã‚‹ã€‚
     // EN: Construct a half-edge data structure for each mesh.
     for (uint32_t meshIdx = 0; meshIdx < srcScene->mNumMeshes; ++meshIdx) {
         const aiMesh* srcMesh = srcScene->mMeshes[meshIdx];
         const uint32_t faceCount = srcMesh->mNumFaces;
 
-        // JP: –Ê‚²‚Æ‚Ì’¸“_ƒCƒ“ƒfƒbƒNƒXƒŠƒXƒg
-        // EN: 
+        // JP: é¢ã”ã¨ã®é ‚ç‚¹ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹åˆ—ã‚’è©°ã‚ãŸãƒªã‚¹ãƒˆã¨ã€é¢ã”ã¨ã®ã‚¨ãƒƒã‚¸æ•°ãƒªã‚¹ãƒˆã‚’ä½œã‚‹ã€‚
+        // EN: Create a packed list of vertex indices for each face and a list of the number of edges per face.
         std::vector<uint32_t> vtxIndicesOnHost;
         std::vector<uint32_t> faceEdgeCountsOnHost(faceCount + 1);
         for (uint32_t faceIdx = 0; faceIdx < faceCount; ++faceIdx) {
@@ -108,7 +114,7 @@ int32_t mainFunc(int32_t argc, const char* argv[]) {
 
 
 
-        // JP: •K—v‚ÈƒXƒNƒ‰ƒbƒ`ƒƒ‚ƒŠƒTƒCƒY‚ğŒvZ‚·‚éB
+        // JP: å¿…è¦ãªã‚¹ã‚¯ãƒ©ãƒƒãƒãƒ¡ãƒ¢ãƒªã‚µã‚¤ã‚ºã‚’è¨ˆç®—ã™ã‚‹ã€‚
         // EN: Calculate the required scratch memory size.
         size_t scratchSizeForCommonOps = 0;
         {
@@ -141,13 +147,13 @@ int32_t mainFunc(int32_t argc, const char* argv[]) {
 
 
         // ----------------------------------------------------------------
-        // JP: ƒn[ƒtƒGƒbƒWƒf[ƒ^\‘¢‚ğ\’z‚·‚éB
+        // JP: ãƒãƒ¼ãƒ•ã‚¨ãƒƒã‚¸ãƒ‡ãƒ¼ã‚¿æ§‹é€ ã‚’æ§‹ç¯‰ã™ã‚‹ã€‚
         // EN: Construct a half-edge data structure.
 
         size_t scratchSize;
 
-        // JP: –Ê‚²‚Æ‚ÌƒGƒbƒW”ƒŠƒXƒg‚ğƒXƒLƒƒƒ“‚µ‚ÄAƒn[ƒtƒGƒbƒWƒx[ƒXƒCƒ“ƒfƒbƒNƒXƒŠƒXƒg‚ğ“¾‚éB
-        //     ‚Ü‚Ÿ‚±‚ê‚ÍƒzƒXƒg‘¤‚Å‚·‚Å‚É‹‚Ü‚Á‚Ä‚¢‚é‚©‚à‚µ‚ê‚È‚¢B
+        // JP: é¢ã”ã¨ã®ã‚¨ãƒƒã‚¸æ•°ãƒªã‚¹ãƒˆã‚’ã‚¹ã‚­ãƒ£ãƒ³ã—ã¦ã€ãƒãƒ¼ãƒ•ã‚¨ãƒƒã‚¸ãƒ™ãƒ¼ã‚¹ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ãƒªã‚¹ãƒˆã‚’å¾—ã‚‹ã€‚
+        //     ã¾ãã“ã‚Œã¯ãƒ›ã‚¹ãƒˆå´ã§ã™ã§ã«æ±‚ã¾ã£ã¦ã„ã‚‹ã‹ã‚‚ã—ã‚Œãªã„ã€‚
         // EN: Scan the face edge count list to get the half-edge base index list.
         //     Well, this could be already available on the host.
         scratchSize = scratchMemForCommonOps.sizeInBytes();
@@ -158,7 +164,7 @@ int32_t mainFunc(int32_t argc, const char* argv[]) {
 
         //std::vector<uint32_t> faceOffsetsOnHost = faceEdgeCounts;
 
-        // JP: ƒn[ƒtƒGƒbƒW\‘¢‚ğ‰Šú‰»‚·‚éB
+        // JP: ãƒãƒ¼ãƒ•ã‚¨ãƒƒã‚¸æ§‹é€ ã‚’åˆæœŸåŒ–ã™ã‚‹ã€‚
         // EN: Initialize half-edge data structures.
         initializeHalfEdges.launchWithThreadDim(
             cuStream, cudau::dim3(faceCount),
@@ -169,7 +175,7 @@ int32_t mainFunc(int32_t argc, const char* argv[]) {
         //std::vector<uint32_t> halfEdgeIndicesOnHost = halfEdgeIndices;
         //std::vector<shared::HalfEdge> halfEdgesOnHost = halfEdges;
 
-        // JP: ƒGƒbƒW‚Æƒn[ƒtƒGƒbƒWƒCƒ“ƒfƒbƒNƒX‚Ì”z—ñ‚ğƒ\[ƒg‚·‚éB
+        // JP: ã‚¨ãƒƒã‚¸ã¨ãƒãƒ¼ãƒ•ã‚¨ãƒƒã‚¸ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã®é…åˆ—ã‚’ã‚½ãƒ¼ãƒˆã™ã‚‹ã€‚
         // EN: Sort the arrays of edges and half edge indices.
         sortDirectedEdges(
             directedEdges.getDevicePointer(), halfEdgeIndices.getDevicePointer(), halfEdgeCount,
@@ -178,7 +184,7 @@ int32_t mainFunc(int32_t argc, const char* argv[]) {
         //std::vector<shared::DirectedEdge> directedEdgesOnHost = directedEdges;
         //std::vector<uint32_t> halfEdgeIndicesOnHost = halfEdgeIndices;
 
-        // JP: ‘oq‚Ìƒn[ƒtƒGƒbƒW‚ğ“Á’è‚·‚éB
+        // JP: åŒå­ã®ãƒãƒ¼ãƒ•ã‚¨ãƒƒã‚¸ã‚’ç‰¹å®šã™ã‚‹ã€‚
         // EN: Find the twin for each half edge.
         findTwinHalfEdges.launchWithThreadDim(
             cuStream, cudau::dim3(halfEdgeCount),
@@ -190,7 +196,7 @@ int32_t mainFunc(int32_t argc, const char* argv[]) {
 
 
 
-        // JP: ƒn[ƒtƒGƒbƒWƒf[ƒ^\‘¢‚ğ—p‚¢‚ÄŠe–Ê‚Ì—×Ú–ÊƒŠƒXƒg‚ğ“¾‚éB
+        // JP: ãƒãƒ¼ãƒ•ã‚¨ãƒƒã‚¸ãƒ‡ãƒ¼ã‚¿æ§‹é€ ã‚’ç”¨ã„ã¦å„é¢ã®éš£æ¥é¢ãƒªã‚¹ãƒˆã‚’å¾—ã‚‹ã€‚
         // EN: Obtain the neighboring face list for each face using the 
         //     half-edge data structure.
         findNeighborFaces.launchWithThreadDim(
@@ -198,7 +204,7 @@ int32_t mainFunc(int32_t argc, const char* argv[]) {
             faceEdgeCounts, faceCount, halfEdges,
             neighborFaceIndices);
 
-        // JP: ƒzƒXƒg‚ÉŒ‹‰Ê‚ğ“Ç‚İo‚µ‚Ä•\¦B
+        // JP: ãƒ›ã‚¹ãƒˆã«çµæœã‚’èª­ã¿å‡ºã—ã¦è¡¨ç¤ºã€‚
         // EN: Read back the result to the host and print it.
         std::vector<uint32_t> faceOffsetsOnHost = faceEdgeCounts;
         std::vector<uint32_t> neighborFaceIndicesOnHost = neighborFaceIndices;
