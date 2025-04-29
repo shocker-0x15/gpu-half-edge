@@ -106,6 +106,11 @@ CUDA_DEVICE_KERNEL void findNeighborFaces(
     const uint32_t faceOffset = faceOffsets[faceIdx];
     const uint32_t nextFaceOffset = faceOffsets[faceIdx + 1];
     const uint32_t faceEdgeCount = nextFaceOffset - faceOffset;
+    if (faceEdgeCount <= 2) {
+        for (uint32_t f_eIdx = 0; f_eIdx < faceEdgeCount; ++f_eIdx)
+            neighborFaceIndices[faceOffset + f_eIdx] = 0xFFFF'FFFF;
+        return;
+    }
     // JP: 各辺のハーフエッジの双子から隣接面を特定する。
     // EN: Identify a neighboring face using the twin of each half edge.
     for (uint32_t f_eIdx = 0; f_eIdx < faceEdgeCount; ++f_eIdx) {
