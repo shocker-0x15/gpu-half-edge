@@ -95,9 +95,9 @@ CUDA_DEVICE_KERNEL void findTwinHalfEdges(
 
 
 
-CUDA_DEVICE_KERNEL void findNeighborFaces(
+CUDA_DEVICE_KERNEL void findAdjacentFaces(
     const uint32_t* const faceOffsets, const uint32_t faceCount, const HalfEdge* const halfEdges,
-    uint32_t* const neighborFaceIndices)
+    uint32_t* const adjFaceIndices)
 {
     const uint32_t faceIdx = blockDim.x * blockIdx.x + threadIdx.x;
     if (faceIdx >= faceCount)
@@ -108,19 +108,19 @@ CUDA_DEVICE_KERNEL void findNeighborFaces(
     const uint32_t faceEdgeCount = nextFaceOffset - faceOffset;
     if (faceEdgeCount <= 2) {
         for (uint32_t f_eIdx = 0; f_eIdx < faceEdgeCount; ++f_eIdx)
-            neighborFaceIndices[faceOffset + f_eIdx] = 0xFFFF'FFFF;
+            adjFaceIndices[faceOffset + f_eIdx] = 0xFFFF'FFFF;
         return;
     }
     // JP: 各辺のハーフエッジの双子から隣接面を特定する。
-    // EN: Identify a neighboring face using the twin of each half edge.
+    // EN: Identify an adjacent face using the twin of each half edge.
     for (uint32_t f_eIdx = 0; f_eIdx < faceEdgeCount; ++f_eIdx) {
         const uint32_t halfEdgeIdx = faceOffset + f_eIdx;
         const HalfEdge &halfEdge = halfEdges[halfEdgeIdx];
-        uint32_t nbFaceIdx = 0xFFFF'FFFF;
+        uint32_t adjFaceIdx = 0xFFFF'FFFF;
         if (halfEdge.twinHalfEdgeIndex != 0xFFFF'FFFF) {
             const HalfEdge &twinHalfEdge = halfEdges[halfEdge.twinHalfEdgeIndex];
-            nbFaceIdx = twinHalfEdge.faceIndex;
+            adjFaceIdx = twinHalfEdge.faceIndex;
         }
-        neighborFaceIndices[faceOffset + f_eIdx] = nbFaceIdx;
+        adjFaceIndices[faceOffset + f_eIdx] = adjFaceIdx;
     }
 }

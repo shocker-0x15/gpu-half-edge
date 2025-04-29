@@ -86,8 +86,8 @@ int32_t mainFunc(int32_t argc, const char* argv[]) {
         cuModule, "initializeHalfEdges", cudau::dim3(32, 1, 1), 0);
     cudau::Kernel findTwinHalfEdges(
         cuModule, "findTwinHalfEdges", cudau::dim3(32, 1, 1), 0);
-    cudau::Kernel findNeighborFaces(
-        cuModule, "findNeighborFaces", cudau::dim3(32, 1, 1), 0);
+    cudau::Kernel findAdjacentFaces(
+        cuModule, "findAdjacentFaces", cudau::dim3(32, 1, 1), 0);
 
 
 
@@ -143,7 +143,7 @@ int32_t mainFunc(int32_t argc, const char* argv[]) {
         cudau::TypedBuffer<shared::HalfEdge> halfEdges(
             cuContext, cudaBufferType, halfEdgeCount);
 
-        cudau::TypedBuffer<uint32_t> neighborFaceIndices(
+        cudau::TypedBuffer<uint32_t> adjFaceIndices(
             cuContext, cudaBufferType, halfEdgeCount);
 
 
@@ -199,33 +199,33 @@ int32_t mainFunc(int32_t argc, const char* argv[]) {
 
 
         // JP: ハーフエッジデータ構造を用いて各面の隣接面リストを得る。
-        // EN: Obtain the neighboring face list for each face using the 
+        // EN: Obtain the adjacent face list for each face using the 
         //     half-edge data structure.
-        findNeighborFaces.launchWithThreadDim(
+        findAdjacentFaces.launchWithThreadDim(
             cuStream, cudau::dim3(faceCount),
             faceEdgeCounts, faceCount, halfEdges,
-            neighborFaceIndices);
+            adjFaceIndices);
 
         // JP: ホストに結果を読み出して表示。
         // EN: Read back the result to the host and print it.
         printf("Mesh %u:\n", meshIdx);
         std::vector<uint32_t> faceOffsetsOnHost = faceEdgeCounts;
-        std::vector<uint32_t> neighborFaceIndicesOnHost = neighborFaceIndices;
+        std::vector<uint32_t> adjFaceIndicesOnHost = adjFaceIndices;
         for (uint32_t faceIdx = 0; faceIdx < faceCount; ++faceIdx) {
             const uint32_t faceOffset = faceOffsetsOnHost[faceIdx];
             const uint32_t nextFaceOffset = faceOffsetsOnHost[faceIdx + 1];
             const uint32_t faceEdgeCount = nextFaceOffset - faceOffset;
 
             printf("%u: %u edges, (", faceIdx, faceEdgeCount);
-            uint32_t nbCount = 0;
+            uint32_t adjCount = 0;
             for (uint32_t f_eIdx = 0; f_eIdx < faceEdgeCount; ++f_eIdx) {
-                const uint32_t nbFaceIdx = neighborFaceIndicesOnHost[faceOffset + f_eIdx];
+                const uint32_t nbFaceIdx = adjFaceIndicesOnHost[faceOffset + f_eIdx];
                 if (nbFaceIdx != 0xFFFF'FFFF) {
                     printf("%u, ", nbFaceIdx);
-                    ++nbCount;
+                    ++adjCount;
                 }
             }
-            printf("), %u neighbors\n", nbCount);
+            printf("), %u adjs\n", adjCount);
         }
         printf("\n");
     }
