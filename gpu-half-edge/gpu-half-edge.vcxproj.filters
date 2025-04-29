@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="..\common.cpp">
+      <Filter>non-essentials</Filter>
+    </ClCompile>
+    <ClCompile Include="..\cuda_util.cpp">
+      <Filter>non-essentials</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="gpu_shared.h" />
+    <ClInclude Include="..\cuda_util.h">
+      <Filter>non-essentials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common.h">
+      <Filter>non-essentials</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="gpu_kernels.cu" />
+    <CudaCompile Include="misc.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="non-essentials">
+      <UniqueIdentifier>{80f82f4e-7cd6-4299-a14f-af9c84babac8}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
