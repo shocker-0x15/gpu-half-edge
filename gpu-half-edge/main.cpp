@@ -52,6 +52,8 @@ int32_t mainFunc(int32_t argc, const char* argv[]) {
 
 
 
+    // JP: メッシュの読み込み。
+    // EN: Load a mesh.
     hpprintf("Reading: %s ... ", filePath.string().c_str());
     fflush(stdout);
     Assimp::Importer importer;
@@ -206,6 +208,7 @@ int32_t mainFunc(int32_t argc, const char* argv[]) {
 
         // JP: ホストに結果を読み出して表示。
         // EN: Read back the result to the host and print it.
+        printf("Mesh %u:\n", meshIdx);
         std::vector<uint32_t> faceOffsetsOnHost = faceEdgeCounts;
         std::vector<uint32_t> neighborFaceIndicesOnHost = neighborFaceIndices;
         for (uint32_t faceIdx = 0; faceIdx < faceCount; ++faceIdx) {
@@ -224,6 +227,7 @@ int32_t mainFunc(int32_t argc, const char* argv[]) {
             }
             printf("), %u neighbors\n", nbCount);
         }
+        printf("\n");
     }
 
     return 0;
