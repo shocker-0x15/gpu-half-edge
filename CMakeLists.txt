@@ -74,10 +74,10 @@ set_project_group("External" "ext/assimp")
 
 file(
     GLOB COMMON_SOURCES
-    "${CMAKE_SOURCE_DIR}/cuda_util.h"
-    "${CMAKE_SOURCE_DIR}/cuda_util.cpp"
-    "${CMAKE_SOURCE_DIR}/common.h"
-    "${CMAKE_SOURCE_DIR}/common.cpp"
+    "${CMAKE_SOURCE_DIR}/common/cuda_util.h"
+    "${CMAKE_SOURCE_DIR}/common/cuda_util.cpp"
+    "${CMAKE_SOURCE_DIR}/common/common.h"
+    "${CMAKE_SOURCE_DIR}/common/common.cpp"
 )
 
 # Called from the sub directories
@@ -85,7 +85,7 @@ function(set_common_sources)
     # non-essentials
     source_group(
         "non-essentials" REGULAR_EXPRESSION
-        "${CMAKE_SOURCE_DIR}/[^/]*\.(h|hpp|c|cpp)$")
+        "${CMAKE_SOURCE_DIR}/common/[^/]*\.(h|hpp|c|cpp)$")
 endfunction()
 
 

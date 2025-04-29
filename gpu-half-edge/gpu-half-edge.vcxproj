@@ -103,13 +103,13 @@
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\common.cpp" />
-    <ClCompile Include="..\cuda_util.cpp" />
+    <ClCompile Include="..\common\common.cpp" />
+    <ClCompile Include="..\common\cuda_util.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\common.h" />
-    <ClInclude Include="..\cuda_util.h" />
+    <ClInclude Include="..\common\common.h" />
+    <ClInclude Include="..\common\cuda_util.h" />
     <ClInclude Include="gpu_shared.h" />
   </ItemGroup>
   <ItemGroup>

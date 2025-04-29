@@ -191,7 +191,7 @@ int32_t mainFunc(int32_t argc, const char* argv[]) {
         findTwinHalfEdges.launchWithThreadDim(
             cuStream, cudau::dim3(halfEdgeCount),
             directedEdges, halfEdgeIndices, halfEdgeCount,
-            faceEdgeCounts, halfEdges);
+            halfEdges);
 
         // END: Construct a half-edge data structure.
         // ----------------------------------------------------------------

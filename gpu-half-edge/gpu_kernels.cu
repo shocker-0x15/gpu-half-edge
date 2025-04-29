@@ -1,4 +1,4 @@
-#include "gpu_shared.h"
+﻿#include "gpu_shared.h"
 
 using namespace shared;
 
@@ -40,22 +40,22 @@ CUDA_DEVICE_KERNEL void initializeHalfEdges(
 
 CUDA_DEVICE_KERNEL void findTwinHalfEdges(
     const DirectedEdge* const sortedEdges, const uint32_t* const sortedHalfEdgeIndices, const uint32_t halfEdgeCount,
-    const uint32_t* const faceOffsets, HalfEdge* const halfEdges)
+    HalfEdge* const halfEdges)
 {
     const uint32_t halfEdgeIdx = blockDim.x * blockIdx.x + threadIdx.x;
     if (halfEdgeIdx >= halfEdgeCount)
         return;
 
+    // JP: 同じ頂点インデックスペア(ただし逆向き)を持つエッジを作成する。
+    // EN: Create an edge with the same vertex index pair (but reversed).
     HalfEdge &halfEdge = halfEdges[halfEdgeIdx];
-    const uint32_t faceOffset = faceOffsets[halfEdge.faceIndex];
-    const uint32_t nextFaceOffset = faceOffsets[halfEdge.faceIndex + 1];
-    const uint32_t faceEdgeCount = nextFaceOffset - faceOffset;
-    const uint32_t nextHalfEdgeIdx = faceOffset + ((halfEdgeIdx - faceOffset) + 1) % faceEdgeCount;
-    const HalfEdge &nextHalfEdge = halfEdges[nextHalfEdgeIdx];
-
+    const HalfEdge &nextHalfEdge = halfEdges[halfEdge.nextHalfEdgeIndex];
     DirectedEdge twinEdge;
     twinEdge.vertexIndexA = nextHalfEdge.orgVertexIndex;
     twinEdge.vertexIndexB = halfEdge.orgVertexIndex;
+
+    // JP: ソートされたエッジ列を二分探索して作成したエッジに対応するものを見つける。
+    // EN: Binary search the sorted edges to find the corresponding edge for the one created.
     uint32_t twinHalfEdgeIdx = 0;
     bool found = false;
     for (uint32_t d = nextPowOf2(halfEdgeCount) >> 1; d >= 1; d >>= 1) {
@@ -69,6 +69,8 @@ CUDA_DEVICE_KERNEL void findTwinHalfEdges(
         }
     }
 
+    // JP: 見つかったハーフエッジを双子として登録する。
+    // EN: Register the found half edge as the twin.
     if (found)
         halfEdge.twinHalfEdgeIndex = sortedHalfEdgeIndices[twinHalfEdgeIdx];
 }
@@ -86,6 +88,8 @@ CUDA_DEVICE_KERNEL void findNeighborFaces(
     const uint32_t faceOffset = faceOffsets[faceIdx];
     const uint32_t nextFaceOffset = faceOffsets[faceIdx + 1];
     const uint32_t faceEdgeCount = nextFaceOffset - faceOffset;
+    // JP: 各辺のハーフエッジの双子から隣接面を特定する。
+    // EN: Identify a neighboring face using the twin of each half edge.
     for (uint32_t f_eIdx = 0; f_eIdx < faceEdgeCount; ++f_eIdx) {
         const uint32_t halfEdgeIdx = faceOffset + f_eIdx;
         const HalfEdge &halfEdge = halfEdges[halfEdgeIdx];
