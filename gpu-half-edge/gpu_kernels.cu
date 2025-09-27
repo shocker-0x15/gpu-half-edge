@@ -74,23 +74,18 @@ CUDA_DEVICE_KERNEL void findTwinHalfEdges(
 
     // JP: ソートされたエッジ列を二分探索して作成したエッジに対応するものを見つける。
     // EN: Binary search the sorted edges to find the corresponding edge for the one created.
-    uint32_t twinHalfEdgeIdx = 0;
-    bool found = false;
-    for (uint32_t d = nextPowOf2(halfEdgeCount) >> 1; d >= 1; d >>= 1) {
-        if (twinHalfEdgeIdx + d >= halfEdgeCount)
-            continue;
-        if (sortedEdges[twinHalfEdgeIdx + d] <= twinEdge) {
-            twinHalfEdgeIdx += d;
-            found = sortedEdges[twinHalfEdgeIdx] == twinEdge;
-            if (found)
-                break;
-        }
+    uint32_t lo = 0, hi = halfEdgeCount;
+    while (lo < hi) {
+        const uint32_t mid = lo + ((hi - lo) >> 1);
+        if (sortedEdges[mid] < twinEdge)
+            lo = mid + 1;
+        else
+            hi = mid;
     }
+    const bool found = (lo < halfEdgeCount) && (sortedEdges[lo] == twinEdge);
 
-    // JP: 見つかったハーフエッジを双子として登録する。
-    // EN: Register the found half edge as the twin.
     if (found)
-        halfEdge.twinHalfEdgeIndex = sortedHalfEdgeIndices[twinHalfEdgeIdx];
+        halfEdge.twinHalfEdgeIndex = sortedHalfEdgeIndices[lo];
 }
 
 
